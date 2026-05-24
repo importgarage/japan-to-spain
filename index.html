@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Calculadora Importación Coches Japón a España | Costes y Homologación JDM</title>
+  <meta name="description" content="Calcula el coste real de importar un coche japonés a España: aranceles, IVA, homologación, ITV, impuesto de matriculación y más. Base de datos de +60 modelos JDM. Actualizado 2026." />
+  <meta name="keywords" content="importar coche japón españa, calculadora importación coches japón, homologación coche japonés españa, JDM españa, importar skyline españa, importar supra españa, aranceles importación coche japón, homologación individual JDM, vehiculo histórico japón, importar rx7 españa, importar evo españa" />
+  <meta name="author" content="JDM Import España" />
+  <meta name="robots" content="index, follow" />
+  <link rel="canonical" href="https://yourusername.github.io/japan-import-calc/" />
+  <meta property="og:type"        content="website" />
+  <meta property="og:locale"      content="es_ES" />
+  <meta property="og:title"       content="Calculadora Importación Coches Japón a España" />
+  <meta property="og:description" content="Calcula el coste real de importar tu coche JDM favorito a España. Aranceles, IVA, homologación y matriculación. Gratis y sin registro." />
+  <meta property="og:url"         content="https://yourusername.github.io/japan-import-calc/" />
+  <meta property="og:site_name"   content="JDM Import España" />
+  <meta name="twitter:card"        content="summary_large_image" />
+  <meta name="twitter:title"       content="Calculadora Importación Coches Japón a España" />
+  <meta name="twitter:description" content="Coste real de importar tu JDM a España. Aranceles, IVA, homologación, ITV y matriculación." />
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "Calculadora Importación Coches Japón a España",
+    "description": "Herramienta gratuita para calcular todos los costes de importar un vehículo japonés a España.",
+    "url": "https://yourusername.github.io/japan-import-calc/",
+    "applicationCategory": "FinanceApplication",
+    "operatingSystem": "Web",
+    "offers": { "@type": "Offer", "price": "0", "priceCurrency": "EUR" },
+    "inLanguage": "es",
+    "creator": { "@type": "Person", "name": "JDM Import España" }
+  }
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="./css/styles.css" />
+</head>
+<body>
+  <!-- NAVIGATION -->
+  <nav class="nav" role="navigation" aria-label="Navegación principal" data-i18n-aria-label="nav.ariaMain">
+    <div class="nav__inner">
+      <a href="#" class="nav__logo" aria-label="JDM Import España — inicio" data-i18n-aria-label="nav.ariaLogoHome">
+        <span class="nav__logo-mark" aria-hidden="true">JDM</span>
+        <span>JDM Import España</span>
+      </a>
+      <ul class="nav__links" id="nav-links" role="list">
+        <li><a href="#calculadora" data-i18n="nav.calculator">Calculadora</a></li>
+        <li><a href="#proceso" data-i18n="nav.process">Proceso</a></li>
+        <li><a href="#costes" data-i18n="nav.costs">Costes</a></li>
+        <li><a href="#faq" data-i18n="nav.faq">FAQ</a></li>
+      </ul>
+      <div class="nav__right">
+        <button class="theme-btn" id="theme-toggle" aria-label="Cambiar modo oscuro/claro">☾</button>
+        <!-- Language switcher -->
+        <div class="lang-switcher" id="lang-switcher" aria-label="Language / Idioma">
+          <button class="lang-btn" data-lang="es">
+            <img src="/img/assets/flags/es.svg" alt="Español" class="lang-flag" width="20" height="14" />
+            <span>ES</span>
+          </button>
+          <button class="lang-btn" data-lang="en">
+            <img src="/img/assets/flags/en.svg" alt="English" class="lang-flag" width="20" height="14" />
+            <span>EN</span>
+          </button>
+          <button class="lang-btn" data-lang="zh">
+            <img src="/img/assets/flags/zh.svg" alt="中文" class="lang-flag" width="20" height="14" />
+            <span>中文</span>
+          </button>
+          <button class="lang-btn" data-lang="ja">
+            <img src="/img/assets/flags/ja.svg" alt="日本語" class="lang-flag" width="20" height="14" />
+            <span>日本語</span>
+          </button>
+        </div>
+        <button class="nav__toggle" id="nav-toggle" aria-label="Abrir menú" aria-expanded="false" data-i18n-aria-label="nav.ariaOpenMenu">☰</button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- HERO -->
+  <header class="hero" role="banner">
+    <div class="hero__tag" aria-label="Categoría" data-i18n="hero.tag">
+      🇯🇵 Coches japoneses → 🇪🇸 España
+    </div>
+    <h1 class="hero__title" data-i18n-html="hero.title">
+      Importa tu <span>JDM</span> a España.<br>Conoce el coste real.
+    </h1>
+    <p class="hero__sub" data-i18n="hero.sub">
+      Calculadora de todos los costes: aranceles EPA/MFN, IVA, homologación individual o histórico, ITV, impuesto de matriculación y tasas DGT. Base de datos de más de 8000 modelos japoneses.
+    </p>
+    <div class="hero__stats" role="list" aria-label="Estadísticas">
+      <div class="hero__stat" role="listitem">
+        <div class="hero__stat-value">+8000</div>
+        <div class="hero__stat-label" data-i18n="hero.statModels">Modelos JDM</div>
+      </div>
+      <div class="hero__stat" role="listitem">
+        <div class="hero__stat-value">0%</div>
+        <div class="hero__stat-label" data-i18n="hero.statTariff">Arancel EPA 2026</div>
+      </div>
+      <div class="hero__stat" role="listitem">
+        <div class="hero__stat-value" data-i18n="hero.statFree">Gratis</div>
+        <div class="hero__stat-label" data-i18n="hero.statNoReg">Sin registro</div>
+      </div>
+    </div>
+  </header>
+
+  <!-- MAIN -->
+  <main class="page" role="main">
+
+    <!-- CALCULATOR -->
+    <section class="section" id="calculadora" aria-labelledby="calc-heading">
+      <p class="section__label" aria-hidden="true" data-i18n="calc.sectionLabel">Herramienta</p>
+      <h2 class="section__title" id="calc-heading" data-i18n="calc.sectionTitle">Calculadora de costes de importación</h2>
+      <p class="section__desc" data-i18n="calc.sectionDesc">
+        Selecciona el modelo, introduce el precio de compra en subasta y ajusta las opciones.
+      </p>
+      <div class="calc-card" id="form-section">
+        <div class="calc-card__header">
+          <span class="calc-card__header-title" data-i18n="calc.cardTitle">Configurar vehículo</span>
+          <span class="calc-card__header-step" data-i18n="calc.cardStep">Paso 1 de 1</span>
+        </div>
+        <div class="calc-card__body">
+          <div class="calc-grid">
+            <div class="form-group">
+              <label class="form-label" for="make" data-i18n="calc.labelMake">Marca</label>
+              <div class="select-wrap">
+                <select class="form-select" id="make" name="make" aria-required="true">
+                  <option value="" data-i18n="calc.placeholderMake">Selecciona marca</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="model" data-i18n="calc.labelModel">Modelo</label>
+              <div class="select-wrap">
+                <select class="form-select" id="model" name="model" aria-required="true" disabled>
+                  <option value="" data-i18n="calc.placeholderModel">Selecciona modelo</option>
+                </select>
+              </div>
+            </div>
+            <div class="form-group full">
+              <label class="form-label" for="generation" data-i18n="calc.labelGeneration">Generación</label>
+              <div class="select-wrap">
+                <select class="form-select" id="generation" name="generation" aria-required="true" disabled>
+                  <option value="" data-i18n="calc.placeholderGeneration">Selecciona generación</option>
+                </select>
+              </div>
+            </div>
+            <div id="vehicle-badge" role="status" aria-live="polite"></div>
+            <div class="form-group">
+              <label class="form-label" for="purchase-price" data-i18n="calc.labelPrice">Precio de compra (€)</label>
+              <input
+                class="form-input" type="number" id="purchase-price" name="purchase-price"
+                placeholder="p.ej. 15000" min="500" step="100"
+                aria-describedby="price-hint" aria-required="true"
+                data-i18n-placeholder="calc.placeholderPrice"
+              />
+              <span class="form-hint" id="price-hint" data-i18n="calc.hintPrice">Precio de subasta, sin transporte</span>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="shipping-cost" data-i18n="calc.labelShipping">Transporte marítimo (€)</label>
+              <input
+                class="form-input" type="number" id="shipping-cost" name="shipping-cost"
+                placeholder="1800" min="800" step="100" value="1800"
+                aria-describedby="shipping-hint"
+                data-i18n-placeholder="calc.placeholderShipping"
+              />
+              <span class="form-hint" id="shipping-hint" data-i18n="calc.hintShipping">Japón → España, estimación orientativa</span>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="fiscal-value" data-i18n="calc.labelFiscal">Valor fiscal Hacienda (€)</label>
+              <input
+                class="form-input" type="number" id="fiscal-value" name="fiscal-value"
+                placeholder="Selecciona un modelo primero"
+                aria-describedby="fiscal-hint"
+                data-i18n-placeholder="calc.placeholderFiscal"
+              />
+              <span class="form-hint" id="fiscal-hint">
+                <a href="https://gestion.tramitesdgtonline.com/valor-venal-en-hacienda/index.php" target="_blank" rel="noopener" data-i18n="calc.hintFiscalLink">Consultar valor en Hacienda →</a>
+              </span>
+            </div>
+            <div class="form-group" id="co2-row" style="display:none">
+              <label class="form-label" for="co2-override" data-i18n="calc.labelCO2">CO₂ (g/km)</label>
+              <input
+                class="form-input" type="number" id="co2-override" name="co2-override"
+                placeholder="Introduce el valor de CO₂"
+                min="0" max="500" step="1"
+                aria-describedby="co2-hint"
+                data-i18n-placeholder="calc.placeholderCO2"
+              />
+              <span class="form-hint" id="co2-hint">
+                <span data-i18n="calc.hintCO2">Dato no disponible. Consulta la ficha técnica o</span>
+                <a href="https://www.ultimatespecs.com" target="_blank" rel="noopener" data-i18n="calc.hintCO2Link">ultimatespecs.com →</a>
+              </span>
+            </div>
+            <div class="checks-group">
+              <label class="check-row" for="has-ac">
+                <input type="checkbox" id="has-ac" name="has-ac" checked />
+                <span class="check-text">
+                  <span data-i18n="calc.checkAC">Aire acondicionado</span>
+                  <span class="check-sub" data-i18n="calc.checkACSub">+€60 impuesto gases fluorados en aduana</span>
+                </span>
+              </label>
+              <label class="check-row" for="use-epa">
+                <input type="checkbox" id="use-epa" name="use-epa" checked />
+                <span class="check-text">
+                  <span data-i18n="calc.checkEPA">Documentación de origen EPA</span>
+                  <span class="check-sub" data-i18n="calc.checkEPASub">0% arancel. Sin ella se aplica 10% MFN</span>
+                </span>
+              </label>
+              <label class="check-row" for="existing-homo" id="existing-homo-row">
+                <input type="checkbox" id="use-existing" name="use-existing" />
+                <span class="check-text">
+                  <span data-i18n="calc.checkExisting">Usar código de homologación existente</span>
+                  <span class="check-sub" data-i18n="calc.checkExistingSub">Aplica si el modelo ya fue homologado en España</span>
+                </span>
+              </label>
+            </div>
+          </div>
+        </div>
+        <div class="calc-footer">
+          <p class="calc-footer-note" data-i18n="calc.footerNote">Los resultados son orientativos. Verifica siempre con un profesional.</p>
+          <button class="btn-calc" id="calc-btn" type="button" data-i18n="calc.calcButton" data-i18n-aria-label="calc.ariaCalcButton" aria-label="Calcular costes de importación">
+            Calcular costes →
+          </button>
+        </div>
+      </div>
+      <div id="results" aria-live="polite" aria-label="Resultados del cálculo"></div>
+    </section>
+
+    <hr class="divider" />
+
+    <!-- PROCESS -->
+    <section class="section" id="proceso" aria-labelledby="proceso-heading">
+      <p class="section__label" aria-hidden="true" data-i18n="process.sectionLabel">Guía rápida</p>
+      <h2 class="section__title" id="proceso-heading" data-i18n="process.sectionTitle">El proceso paso a paso</h2>
+      <p class="section__desc" data-i18n="process.sectionDesc">
+        Desde la subasta en Japón hasta las placas españolas.
+      </p>
+      <ol class="steps-list" aria-label="Pasos del proceso de importación" data-i18n-aria-label="process.ariaList">
+        <li class="step-item">
+          <div class="step-num" aria-hidden="true">1</div>
+          <div class="step-content">
+            <p class="step-title" data-i18n="process.step1Title">Compra en subasta japonesa</p>
+            <p class="step-desc" data-i18n="process.step1Desc">Redes USS, TAA, JAA, HAA o AUCNET.</p>
+          </div>
+        </li>
+        <li class="step-item">
+          <div class="step-num" aria-hidden="true">2</div>
+          <div class="step-content">
+            <p class="step-title" data-i18n="process.step2Title">Desmatriculación y exportación desde Japón</p>
+            <p class="step-desc" data-i18n="process.step2Desc">Desmatricular en Japón y obtener el certificado de exportación.</p>
+          </div>
+        </li>
+        <li class="step-item">
+          <div class="step-num" aria-hidden="true">3</div>
+          <div class="step-content">
+            <p class="step-title" data-i18n="process.step3Title">Despacho de aduanas de España</p>
+            <p class="step-desc" data-i18n="process.step3Desc">Presentar DUA, pagar arancel e IVA.</p>
+          </div>
+        </li>
+        <li class="step-item">
+          <div class="step-num" aria-hidden="true">4</div>
+          <div class="step-content">
+            <p class="step-title" data-i18n="process.step4Title">Reparación en garaje</p>
+            <p class="step-desc" data-i18n="process.step4Desc">Sin límite de tiempo mientras el vehículo no circula.</p>
+          </div>
+        </li>
+        <li class="step-item">
+          <div class="step-num" aria-hidden="true">5</div>
+          <div class="step-content">
+            <p class="step-title" data-i18n="process.step5Title">Homologación</p>
+            <p class="step-desc" data-i18n="process.step5Desc">Vehículos de +30 años: ruta histórico. Resto: homologación individual.</p>
+          </div>
+        </li>
+        <li class="step-item">
+          <div class="step-num" aria-hidden="true">6</div>
+          <div class="step-content">
+            <p class="step-title" data-i18n="process.step6Title">ITV de matriculación</p>
+            <p class="step-desc" data-i18n="process.step6Desc">ITV de importación en estación autorizada.</p>
+          </div>
+        </li>
+        <li class="step-item">
+          <div class="step-num" aria-hidden="true">7</div>
+          <div class="step-content">
+            <p class="step-title" data-i18n="process.step7Title">Impuestos y matrícula DGT</p>
+            <p class="step-desc" data-i18n="process.step7Desc">Pagar Impuesto de Matriculación y tasa DGT.</p>
+          </div>
+        </li>
+      </ol>
+    </section>
+
+    <hr class="divider" />
+
+    <!-- COSTS -->
+    <section class="section" id="costes" aria-labelledby="costes-heading">
+      <p class="section__label" aria-hidden="true" data-i18n="costs.sectionLabel">Referencia</p>
+      <h2 class="section__title" id="costes-heading" data-i18n="costs.sectionTitle">Conceptos de coste explicados</h2>
+      <p class="section__desc" data-i18n="costs.sectionDesc">Cada partida del coste total.</p>
+      <div class="info-grid">
+        <article class="info-card">
+          <span class="info-card__icon" aria-hidden="true">🛃</span>
+          <h3 class="info-card__title" data-i18n="costs.tariffTitle">Arancel aduanero</h3>
+          <p class="info-card__text" data-i18n-html="costs.tariffText">El Acuerdo EPA UE-Japón reduce el arancel a <strong>0%</strong>.</p>
+        </article>
+        <article class="info-card">
+          <span class="info-card__icon" aria-hidden="true">🧾</span>
+          <h3 class="info-card__title" data-i18n="costs.vatTitle">IVA de importación</h3>
+          <p class="info-card__text" data-i18n-html="costs.vatText"><strong>21%</strong> sobre el valor CIF.</p>
+        </article>
+        <article class="info-card">
+          <span class="info-card__icon" aria-hidden="true">🔧</span>
+          <h3 class="info-card__title" data-i18n="costs.homoTitle">Homologación</h3>
+          <p class="info-card__text" data-i18n-html="costs.homoText">Histórico, equivalencia o individual.</p>
+        </article>
+        <article class="info-card">
+          <span class="info-card__icon" aria-hidden="true">🚗</span>
+          <h3 class="info-card__title" data-i18n="costs.matricTitle">Impuesto de matriculación</h3>
+          <p class="info-card__text" data-i18n="costs.matricText">Basado en emisiones de CO₂.</p>
+        </article>
+        <article class="info-card">
+          <span class="info-card__icon" aria-hidden="true">📄</span>
+          <h3 class="info-card__title" data-i18n="costs.translationTitle">Traducción jurada y apostilla</h3>
+          <p class="info-card__text" data-i18n="costs.translationText">Obligatorio para aduana, ITV y DGT.</p>
+        </article>
+        <article class="info-card">
+          <span class="info-card__icon" aria-hidden="true">⭐</span>
+          <h3 class="info-card__title" data-i18n="costs.tipTitle">Consejo: homologación por equivalencia</h3>
+          <p class="info-card__text" data-i18n-html="costs.tipText">Verificar código existente antes de iniciar trámites.</p>
+        </article>
+      </div>
+    </section>
+
+    <hr class="divider" />
+
+    <!-- FAQ -->
+    <section class="section" id="faq" aria-labelledby="faq-heading">
+      <p class="section__label" aria-hidden="true" data-i18n="faq.sectionLabel">Preguntas frecuentes</p>
+      <h2 class="section__title" id="faq-heading" data-i18n="faq.sectionTitle">FAQ</h2>
+      <div class="info-grid">
+        <article class="info-card">
+          <h3 class="info-card__title" data-i18n="faq.q1Title">¿Puedo tener el coche en el garaje sin matricular indefinidamente?</h3>
+          <p class="info-card__text" data-i18n="faq.q1Text">Sí. No hay límite de tiempo legal.</p>
+        </article>
+        <article class="info-card">
+          <h3 class="info-card__title" data-i18n="faq.q2Title">¿Se puede importar un coche con el volante a la derecha?</h3>
+          <p class="info-card__text" data-i18n="faq.q2Text">Sí, para turismos sin restricción.</p>
+        </article>
+        <article class="info-card">
+          <h3 class="info-card__title" data-i18n="faq.q3Title">¿El coche necesita pasar ITV antes de entrar en España?</h3>
+          <p class="info-card__text" data-i18n="faq.q3Text">No. El vehículo puede entrar en estado dañado.</p>
+        </article>
+        <article class="info-card">
+          <h3 class="info-card__title" data-i18n="faq.q4Title">¿La homologación japonesa vale en España?</h3>
+          <p class="info-card__text" data-i18n="faq.q4Text">No. Japón no es miembro de la UE.</p>
+        </article>
+        <article class="info-card">
+          <h3 class="info-card__title" data-i18n="faq.q5Title">¿Qué pasa si el coche suspende la ITV?</h3>
+          <p class="info-card__text" data-i18n="faq.q5Text">Debes corregir los defectos en dos meses.</p>
+        </article>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- FOOTER -->
+  <footer class="footer" role="contentinfo">
+    <div class="footer__inner">
+      <div class="footer__logo" data-i18n="footer.logo">JDM Import España</div>
+      <p class="footer__text" data-i18n="footer.text">
+        Herramienta orientativa actualizada en 2026.
+      </p>
+      <ul class="footer__links">
+        <li><a href="#calculadora" data-i18n="footer.linkCalc">Calculadora</a></li>
+        <li><a href="#proceso" data-i18n="footer.linkProcess">Proceso</a></li>
+        <li><a href="#faq" data-i18n="footer.linkFAQ">FAQ</a></li>
+      </ul>
+      <p style="font-size:.72rem;color:var(--text-muted);margin-top:16px" data-i18n="footer.sources">
+        Fuentes: Agencia Tributaria · DGT · Ministerio de Industria · TARIC EU · Acuerdo EPA UE-Japón
+      </p>
+    </div>
+  </footer>
+
+  <script src="./js/calculator.js"></script>
+</body>
+</html>
