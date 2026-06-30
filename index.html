@@ -52,7 +52,6 @@
       </ul>
       <div class="nav__right">
         <button class="theme-btn" id="theme-toggle" aria-label="Cambiar modo oscuro/claro">☾</button>
-        <!-- Language switcher -->
         <div class="lang-switcher" id="lang-switcher" aria-label="Language / Idioma">
           <button class="lang-btn" data-lang="es">
             <img src="./img/assets/flags/es.svg" alt="Español" class="lang-flag" width="20" height="14" />
@@ -120,6 +119,8 @@
         </div>
         <div class="calc-card__body">
           <div class="calc-grid">
+
+            <!-- Vehicle selection -->
             <div class="form-group">
               <label class="form-label" for="make" data-i18n="calc.labelMake">Marca</label>
               <div class="select-wrap">
@@ -136,6 +137,19 @@
                 </select>
               </div>
             </div>
+
+            <!-- Year of manufacture — shown after model selected -->
+            <div class="form-group" id="year-row" style="display:none">
+              <label class="form-label" for="manufacture-year" data-i18n="calc.labelYear">Año de fabricación</label>
+              <input
+                class="form-input" type="number" id="manufacture-year" name="manufacture-year"
+                placeholder="p.ej. 1999" min="1960" max="2026" step="1"
+                aria-describedby="year-hint"
+                data-i18n-placeholder="calc.placeholderYear"
+              />
+              <span class="form-hint" id="year-hint" data-i18n="calc.hintYear">Filtra las generaciones disponibles para ese año</span>
+            </div>
+
             <div class="form-group full">
               <label class="form-label" for="generation" data-i18n="calc.labelGeneration">Generación</label>
               <div class="select-wrap">
@@ -145,6 +159,8 @@
               </div>
             </div>
             <div id="vehicle-badge" role="status" aria-live="polite"></div>
+
+            <!-- Purchase price -->
             <div class="form-group">
               <label class="form-label" for="purchase-price" data-i18n="calc.labelPrice">Precio de compra (€)</label>
               <input
@@ -153,8 +169,34 @@
                 aria-describedby="price-hint" aria-required="true"
                 data-i18n-placeholder="calc.placeholderPrice"
               />
-              <span class="form-hint" id="price-hint" data-i18n="calc.hintPrice">Precio de subasta, sin transporte</span>
+              <span class="form-hint" id="price-hint" data-i18n="calc.hintPrice">Precio de subasta, sin comisiones</span>
             </div>
+
+            <!-- Auction fee -->
+            <div class="form-group">
+              <label class="form-label" for="auction-fee" data-i18n="calc.labelAuctionFee">Comisión de subasta (€)</label>
+              <input
+                class="form-input" type="number" id="auction-fee" name="auction-fee"
+                placeholder="p.ej. 500" min="0" step="10"
+                aria-describedby="auction-fee-hint"
+                data-i18n-placeholder="calc.placeholderAuctionFee"
+              />
+              <span class="form-hint" id="auction-fee-hint" data-i18n="calc.hintAuctionFee">Casa de subastas, broker, exportación y gestión en Japón</span>
+            </div>
+
+            <!-- Inland Japan transport -->
+            <div class="form-group">
+              <label class="form-label" for="inland-transport" data-i18n="calc.labelInlandTransport">Transporte interior Japón (€)</label>
+              <input
+                class="form-input" type="number" id="inland-transport" name="inland-transport"
+                placeholder="p.ej. 250" min="0" step="10"
+                aria-describedby="inland-hint"
+                data-i18n-placeholder="calc.placeholderInlandTransport"
+              />
+              <span class="form-hint" id="inland-hint" data-i18n="calc.hintInlandTransport">Traslado desde el recinto de subasta hasta el puerto de exportación</span>
+            </div>
+
+            <!-- Shipping -->
             <div class="form-group">
               <label class="form-label" for="shipping-cost" data-i18n="calc.labelShipping">Transporte marítimo (€)</label>
               <input
@@ -165,6 +207,44 @@
               />
               <span class="form-hint" id="shipping-hint" data-i18n="calc.hintShipping">Japón → España, estimación orientativa</span>
             </div>
+
+            <!-- Marine insurance -->
+            <div class="form-group">
+              <label class="form-label" for="marine-insurance" data-i18n="calc.labelMarineInsurance">Seguro marítimo (€)</label>
+              <input
+                class="form-input" type="number" id="marine-insurance" name="marine-insurance"
+                placeholder="150" min="0" step="10" value="150"
+                aria-describedby="insurance-hint"
+                data-i18n-placeholder="calc.placeholderMarineInsurance"
+              />
+              <span class="form-hint" id="insurance-hint" data-i18n="calc.hintMarineInsurance">Cubre pérdida o daños durante el tránsito marítimo</span>
+            </div>
+
+            <!-- Port handling -->
+            <div class="form-group">
+              <label class="form-label" for="port-handling" data-i18n="calc.labelPortHandling">Gastos de puerto (€)</label>
+              <input
+                class="form-input" type="number" id="port-handling" name="port-handling"
+                placeholder="p.ej. 450" min="0" step="10"
+                aria-describedby="port-hint"
+                data-i18n-placeholder="calc.placeholderPortHandling"
+              />
+              <span class="form-hint" id="port-hint" data-i18n="calc.hintPortHandling">Despacho aduanero, descarga y almacenaje en puerto</span>
+            </div>
+
+            <!-- Homologation cost -->
+            <div class="form-group">
+              <label class="form-label" for="homo-cost" data-i18n="calc.labelHomoCost">Coste de homologación (€)</label>
+              <input
+                class="form-input" type="number" id="homo-cost" name="homo-cost"
+                placeholder="Solicita presupuesto previo" min="0" step="10"
+                aria-describedby="homo-cost-hint"
+                data-i18n-placeholder="calc.placeholderHomoCost"
+              />
+              <span class="form-hint" id="homo-cost-hint" data-i18n="calc.hintHomoCost">Introduce el presupuesto recibido del taller homologador</span>
+            </div>
+
+            <!-- Fiscal value -->
             <div class="form-group">
               <label class="form-label" for="fiscal-value" data-i18n="calc.labelFiscal">Valor fiscal Hacienda (€)</label>
               <input
@@ -177,6 +257,8 @@
                 <a href="https://gestion.tramitesdgtonline.com/valor-venal-en-hacienda/index.php" target="_blank" rel="noopener" data-i18n="calc.hintFiscalLink">Consultar valor en Hacienda →</a>
               </span>
             </div>
+
+            <!-- CO2 override -->
             <div class="form-group" id="co2-row" style="display:none">
               <label class="form-label" for="co2-override" data-i18n="calc.labelCO2">CO₂ (g/km)</label>
               <input
@@ -191,6 +273,8 @@
                 <a href="https://www.ultimatespecs.com" target="_blank" rel="noopener" data-i18n="calc.hintCO2Link">ultimatespecs.com →</a>
               </span>
             </div>
+
+            <!-- Checkboxes -->
             <div class="checks-group">
               <label class="check-row" for="has-ac">
                 <input type="checkbox" id="has-ac" name="has-ac" checked />
@@ -214,6 +298,7 @@
                 </span>
               </label>
             </div>
+
           </div>
         </div>
         <div class="calc-footer">

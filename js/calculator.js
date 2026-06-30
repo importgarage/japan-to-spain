@@ -1,15 +1,16 @@
 // ─────────────────────────────────────────────────────────────────────────────
 //  CONSTANTS
 // ─────────────────────────────────────────────────────────────────────────────
-const IVA_RATE            = 0.21;
-const EPA_RATE            = 0.00;
-const MFN_RATE            = 0.10;
-const FLUORINATED_GAS_TAX = 60;
-const ITV_FEE_LOW         = 100;
-const ITV_FEE_HIGH        = 100;
-const DGT_FEE             = 99.77;
-const TRANSLATION_COST    = 150;
-const SUPPORTED_LANGS     = ["es", "en", "zh", "ja"];
+const IVA_RATE               = 0.21;
+const EPA_RATE               = 0.00;
+const MFN_RATE               = 0.10;
+const FLUORINATED_GAS_TAX    = 60;
+const ITV_FEE                = 130;
+const DGT_FEE                = 99.77;
+const PLATES_COST            = 30;
+const SWORN_TRANSLATION_COST = 150;
+const MARINE_INSURANCE_DEFAULT = 150;
+const SUPPORTED_LANGS        = ["es", "en", "zh", "ja"];
 
 // ─────────────────────────────────────────────────────────────────────────────
 //  I18N
@@ -34,12 +35,10 @@ async function loadLang(code) {
   document.documentElement.setAttribute("lang", code);
 }
 
-// Resolve a dot-notation key, e.g. t("calc.calcButton")
 function t(key) {
   return key.split(".").reduce((obj, k) => obj && obj[k], LANG) || key;
 }
 
-// Resolve with {placeholder} interpolation
 function ti(key, vars = {}) {
   let str = t(key);
   Object.entries(vars).forEach(([k, v]) => {
@@ -48,40 +47,28 @@ function ti(key, vars = {}) {
   return str;
 }
 
-// Walk the DOM and apply all data-i18n* attributes
 function applyLang() {
-  // Plain text
   document.querySelectorAll("[data-i18n]").forEach(el => {
-    const key = el.getAttribute("data-i18n");
-    el.textContent = t(key);
+    el.textContent = t(el.getAttribute("data-i18n"));
   });
-  // Inner HTML (for strings containing <strong>, <br/> etc.)
   document.querySelectorAll("[data-i18n-html]").forEach(el => {
-    const key = el.getAttribute("data-i18n-html");
-    el.innerHTML = t(key);
+    el.innerHTML = t(el.getAttribute("data-i18n-html"));
   });
-  // Placeholders
   document.querySelectorAll("[data-i18n-placeholder]").forEach(el => {
-    const key = el.getAttribute("data-i18n-placeholder");
-    el.setAttribute("placeholder", t(key));
+    el.setAttribute("placeholder", t(el.getAttribute("data-i18n-placeholder")));
   });
-  // aria-label
   document.querySelectorAll("[data-i18n-aria-label]").forEach(el => {
-    const key = el.getAttribute("data-i18n-aria-label");
-    el.setAttribute("aria-label", t(key));
+    el.setAttribute("aria-label", t(el.getAttribute("data-i18n-aria-label")));
   });
-  // Update active state on lang switcher buttons
   document.querySelectorAll(".lang-btn").forEach(btn => {
     btn.classList.toggle("lang-btn--active", btn.dataset.lang === CURRENT_LANG);
   });
-  // Repopulate dynamic select placeholders
   const makeFirst = document.querySelector("#make option[value='']");
   if (makeFirst) makeFirst.textContent = t("calc.placeholderMake");
   const modelFirst = document.querySelector("#model option[value='']");
   if (modelFirst) modelFirst.textContent = t("calc.placeholderModel");
   const genFirst = document.querySelector("#generation option[value='']");
   if (genFirst) genFirst.textContent = t("calc.placeholderGeneration");
-  // Update theme button aria-label
   const theme = document.documentElement.getAttribute("data-theme");
   const themeToggle = document.getElementById("theme-toggle");
   if (themeToggle) {
@@ -165,64 +152,58 @@ async function fetchFiscalValue(make, model) {
 // ─────────────────────────────────────────────────────────────────────────────
 //  CALCULATOR CORE
 // ─────────────────────────────────────────────────────────────────────────────
-function calculate(vehicle, purchasePrice, shippingCost, hasAC, useEPA, useExistingHomo, fiscalValue) {
-  const v         = vehicle;
-  const insurance = Math.round(purchasePrice * 0.005);
-  const cif       = purchasePrice + shippingCost + insurance;
+function calculate(vehicle, purchasePrice, auctionFee, inlandTransport, shippingCost, marineInsurance, portHandling, homoCost, hasAC, useEPA, useExistingHomo, fiscalValue, manufactureYear) {
+  const v          = vehicle;
+  const cif        = purchasePrice + auctionFee + inlandTransport + shippingCost + marineInsurance;
   const tariffRate = useEPA ? EPA_RATE : MFN_RATE;
   const tariff     = Math.round(cif * tariffRate);
   const iva        = Math.round((cif + tariff) * IVA_RATE);
   const fluorGas   = hasAC ? FLUORINATED_GAS_TAX : 0;
   const historico  = isHistorico(v);
 
-  let homoLow, homoHigh, homoLabel;
-  if (historico) {
-    homoLow   = 150;  homoHigh = 400;
-    homoLabel = t("results.homoHistoric");
-  } else if (useExistingHomo) {
-    homoLow   = 300;  homoHigh = 600;
-    homoLabel = t("results.homoEquivalence");
-  } else {
-    homoLow   = 1500; homoHigh = 2000;
-    homoLabel = t("results.homoIndividual");
-  }
+  let homoLabel;
+  if (historico)            homoLabel = t("results.homoHistoric");
+  else if (useExistingHomo) homoLabel = t("results.homoEquivalence");
+  else                      homoLabel = t("results.homoIndividual");
 
-  const age            = getAge(v);
+  const age            = (manufactureYear && manufactureYear > 0)
+                           ? Math.max(0, new Date().getFullYear() - manufactureYear)
+                           : getAge(v);
   const deprFactor     = getDepreciation(age);
+  const deprPercent    = Math.round(deprFactor * 100);
   const hasFiscalValue = fiscalValue !== null && fiscalValue > 0;
-  const fiscalBase     = hasFiscalValue ? fiscalValue * deprFactor : purchasePrice * deprFactor;
-  const taxBase        = Math.max(purchasePrice, fiscalBase);
+  const fiscalBase     = hasFiscalValue ? fiscalValue : purchasePrice;
+  const taxableBase    = Math.round(fiscalBase * deprFactor);
+  const taxBase        = Math.max(purchasePrice, taxableBase);
   const co2Estimated   = estimateCO2(v);
   const co2IsEstimate  = (v.co2 === null || v.co2 === undefined) && co2Estimated !== null;
   const matricRate     = getMatriculacionRate(co2Estimated);
   const matricTax      = matricRate === null ? null : Math.round(taxBase * matricRate);
   const matricForTotal = matricTax === null ? 0 : matricTax;
-  const adaptationsLow  = 100;
-  const adaptationsHigh = 500;
 
-  const totalLow  = purchasePrice + shippingCost + tariff + iva + fluorGas
-                  + homoLow  + ITV_FEE_LOW  + matricForTotal + DGT_FEE + TRANSLATION_COST + adaptationsLow;
-  const totalHigh = purchasePrice + shippingCost + tariff + iva + fluorGas
-                  + homoHigh + ITV_FEE_HIGH + matricForTotal + DGT_FEE + TRANSLATION_COST + adaptationsHigh;
+  const total    = purchasePrice + auctionFee + inlandTransport + shippingCost + marineInsurance
+                 + portHandling + tariff + iva + fluorGas
+                 + homoCost + ITV_FEE + matricForTotal
+                 + DGT_FEE + SWORN_TRANSLATION_COST + PLATES_COST;
+
+  const delivery = total - purchasePrice - auctionFee;
 
   let matricLabel;
-  if (matricRate === null)    matricLabel = t("results.matricUnknown");
-  else if (matricRate === 0)  matricLabel = t("results.matricExempt");
-  else                        matricLabel = ti("results.matricRate", { rate: (matricRate * 100).toFixed(2) });
+  if (matricRate === null)   matricLabel = t("results.matricUnknown");
+  else if (matricRate === 0) matricLabel = t("results.matricExempt");
+  else                       matricLabel = ti("results.matricRate", { rate: (matricRate * 100).toFixed(2) });
 
   return {
-    vehicle: v, historico, cif, insurance,
+    vehicle: v, historico, cif,
+    auctionFee, inlandTransport, shippingCost, marineInsurance, portHandling,
     tariffRate, tariff, iva, fluorGas,
-    homoLow, homoHigh, homoLabel,
+    homoCost, homoLabel,
     matricRate, matricTax, matricForTotal,
     co2Estimated, co2IsEstimate,
-    age, deprFactor, fiscalBase, taxBase, hasFiscalValue,
-    adaptationsLow, adaptationsHigh,
-    totalLow:        Math.round(totalLow),
-    totalHigh:       Math.round(totalHigh),
-    importCostsLow:  Math.round(totalLow  - purchasePrice),
-    importCostsHigh: Math.round(totalHigh - purchasePrice),
-    co2Band:         co2BandLabel(co2Estimated),
+    age, deprFactor, deprPercent,
+    fiscalBase, taxableBase, taxBase, hasFiscalValue,
+    total:    Math.round(total),
+    delivery: Math.round(delivery),
     matricLabel
   };
 }
@@ -239,6 +220,80 @@ function formatEuro(n) {
   return "€" + Math.round(n).toLocaleString("es-ES");
 }
 
+function formatPercent(n) {
+  return Math.round(n * 100) + "%";
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+//  QUOTE TEMPLATES
+// ─────────────────────────────────────────────────────────────────────────────
+function buildHomoTemplate(v, purchasePrice) {
+  const generation = [v.generation, v.variant].filter(Boolean).join(" / ") || "—";
+  const co2        = (v.co2 !== null && v.co2 !== undefined) ? `${v.co2} g/km` : "no disponible";
+  const fuel       = v.fuelType || "—";
+  const power      = v.power    ? `${v.power} CV` : "—";
+  const cc         = v.cc       ? `${v.cc} cc`    : "—";
+
+  return `Asunto: Consulta homologación vehículo japonés — ${v.make} ${v.model} ${v.years[1]}
+
+Buenos días,
+
+Me pongo en contacto para solicitar información sobre la homologación de un vehículo importado directamente de Japón con las siguientes características:
+
+  Marca:                 ${v.make}
+  Modelo:                ${v.model}
+  Generación / Variante: ${generation}
+  Año de fabricación:    ${v.years[1]}
+  Motor:                 ${v.engine || "—"} — ${cc}
+  Combustible:           ${fuel}
+  Potencia:              ${power}
+  CO₂ (g/km):            ${co2}
+  Volante:               Derecha (JDM)
+
+Mi primera consulta es si existe alguna contraseña de homologación por equivalencia para este vehículo en la base de datos del Ministerio de Industria, ya que sería la vía preferida antes de iniciar cualquier otro trámite.
+
+En caso de que no exista equivalencia, le agradecería que me facilitara un presupuesto cerrado para homologación individual, indicando plazo estimado y si el vehículo debe desplazarse físicamente a sus instalaciones o si el proceso puede gestionarse de forma remota.
+
+Quedo a su disposición para cualquier aclaración adicional.
+
+Un saludo,
+[NOMBRE]
+[TELÉFONO / EMAIL]`;
+}
+
+function buildPortTemplate(v, purchasePrice) {
+  const generation = [v.generation, v.variant].filter(Boolean).join(" / ") || "—";
+
+  return `Asunto: Consulta gastos de puerto — ${v.make} ${v.model} ${v.years[1]}
+
+Buenos días,
+
+Me pongo en contacto para solicitar información sobre los gastos de despacho y puerto para un vehículo importado de Japón con las siguientes características:
+
+  Marca:                 ${v.make}
+  Modelo:                ${v.model}
+  Generación / Variante: ${generation}
+  Año de fabricación:    ${v.years[1]}
+  Valor declarado:       €${Math.round(purchasePrice).toLocaleString("es-ES")}
+  Método de envío:       [RoRo / Contenedor]
+  Puerto de origen:      [OSAKA / NAGOYA / YOKOHAMA]
+  Puerto de destino:     [PUERTO]
+  Fecha estimada de llegada: [FECHA]
+
+Le agradecería que me facilitara un presupuesto detallado que incluya:
+
+  1. Gastos de descarga y manipulación en puerto
+  2. Despacho aduanero (DUA)
+  3. Almacenaje estimado
+  4. Cualquier otro coste aplicable hasta la entrega del vehículo
+
+Quedo a su disposición para cualquier aclaración.
+
+Un saludo,
+[NOMBRE]
+[TELÉFONO / EMAIL]`;
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 //  UI
 // ─────────────────────────────────────────────────────────────────────────────
@@ -249,6 +304,31 @@ document.addEventListener("DOMContentLoaded", async () => {
   await loadLang(initialLang);
   applyLang();
 
+  // ── Helper to read all inputs and re-calculate ─────────────────────────────
+  function getCurrentInputs() {
+    const idx = generationSelect.value;
+    if (!idx) return null;
+    const price = parseFloat(priceInput.value);
+    if (isNaN(price) || price <= 0) return null;
+    let v = currentVehicles[parseInt(idx)];
+    const co2Override = document.getElementById("co2-override");
+    if (co2Override && co2Override.value) {
+      v = { ...v, co2: parseFloat(co2Override.value) };
+    }
+    return {
+      v,
+      price,
+      auctionFee:      parseFloat(document.getElementById("auction-fee")?.value)      || 0,
+      inlandTransport: parseFloat(document.getElementById("inland-transport")?.value)  || 0,
+      shipping:        parseFloat(shippingInput.value)                                 || 1800,
+      marineInsurance: parseFloat(document.getElementById("marine-insurance")?.value)  || MARINE_INSURANCE_DEFAULT,
+      portHandling:    parseFloat(document.getElementById("port-handling")?.value)     || 0,
+      homoCost:        parseFloat(document.getElementById("homo-cost")?.value)         || 0,
+      fiscalValue:     fiscalInput ? parseFloat(fiscalInput.value) || 0 : 0,
+      manufactureYear: parseInt(document.getElementById("manufacture-year")?.value)    || 0,
+    };
+  }
+
   // ── Language switcher ──────────────────────────────────────────────────────
   document.querySelectorAll(".lang-btn").forEach(btn => {
     btn.addEventListener("click", async () => {
@@ -256,25 +336,16 @@ document.addEventListener("DOMContentLoaded", async () => {
       if (code === CURRENT_LANG) return;
       await loadLang(code);
       applyLang();
-      // Re-render results if visible, so they update immediately
       if (resultsDiv && resultsDiv.style.display !== "none" && resultsDiv.innerHTML.trim()) {
-        const idx = generationSelect.value;
-        if (idx) {
-          const price = parseFloat(priceInput.value);
-          if (!isNaN(price) && price > 0) {
-            let v = currentVehicles[parseInt(idx)];
-            const co2Override = document.getElementById("co2-override");
-            if (co2Override && co2Override.value) {
-              v = { ...v, co2: parseFloat(co2Override.value) };
-            }
-            const result = calculate(
-              v, price,
-              parseFloat(shippingInput.value) || 1800,
-              acCheck.checked, epaCheck.checked, existingCheck.checked,
-              parseFloat(fiscalInput.value) || 0
-            );
-            renderResults(result);
-          }
+        const inputs = getCurrentInputs();
+        if (inputs) {
+          const result = calculate(
+            inputs.v, inputs.price, inputs.auctionFee, inputs.inlandTransport,
+            inputs.shipping, inputs.marineInsurance, inputs.portHandling, inputs.homoCost,
+            acCheck.checked, epaCheck.checked, existingCheck.checked, inputs.fiscalValue,
+            inputs.manufactureYear
+          );
+          renderResults(result);
         }
       }
     });
@@ -282,6 +353,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   const makeSelect       = document.getElementById("make");
   const modelSelect      = document.getElementById("model");
+  const yearInput        = document.getElementById("manufacture-year");
   const generationSelect = document.getElementById("generation");
   const priceInput       = document.getElementById("purchase-price");
   const shippingInput    = document.getElementById("shipping-cost");
@@ -293,6 +365,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   const resultsDiv       = document.getElementById("results");
   const existingRow      = document.getElementById("existing-homo-row");
   const vehicleBadge     = document.getElementById("vehicle-badge");
+  const yearRow          = document.getElementById("year-row");
 
   // ── Theme ──────────────────────────────────────────────────────────────────
   const themeToggle = document.getElementById("theme-toggle");
@@ -315,6 +388,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   // ── Vehicle data ───────────────────────────────────────────────────────────
   let currentVehicles = [];
+  let currentModel    = null;
   const MAKES = ["Acura","Aspark","Daihatsu","Datsun","Honda","Infiniti","Isuzu","Lexus","Mazda","Mitsubishi","Nissan","Subaru","Suzuki","Toyota"];
   MAKES.forEach(m => {
     const opt = document.createElement("option");
@@ -329,8 +403,10 @@ document.addEventListener("DOMContentLoaded", async () => {
     generationSelect.innerHTML = `<option value="">${t("calc.placeholderGeneration")}</option>`;
     modelSelect.disabled       = true;
     generationSelect.disabled  = true;
+    if (yearRow) yearRow.style.display = "none";
     existingRow.style.display  = "none";
     existingCheck.checked      = false;
+    currentModel               = null;
     if (vehicleBadge) vehicleBadge.style.display = "none";
     if (!selectedMake) return;
     try {
@@ -348,16 +424,44 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   });
 
-  // ── Model → Generations ────────────────────────────────────────────────────
+  // ── Model → show year input ────────────────────────────────────────────────
   modelSelect.addEventListener("change", () => {
-    const selectedModel = modelSelect.value;
+    currentModel = modelSelect.value;
     generationSelect.innerHTML = `<option value="">${t("calc.placeholderGeneration")}</option>`;
     generationSelect.disabled  = true;
     existingRow.style.display  = "none";
     existingCheck.checked      = false;
     if (vehicleBadge) vehicleBadge.style.display = "none";
-    if (!selectedModel) return;
-    const matching = currentVehicles.filter(v => v.model === selectedModel);
+    if (!currentModel) {
+      if (yearRow) yearRow.style.display = "none";
+      return;
+    }
+    // Show year input and clear it
+    if (yearRow) yearRow.style.display = "flex";
+    if (yearInput) yearInput.value = "";
+  });
+
+  // ── Year input → filter generations ───────────────────────────────────────
+  function populateGenerations() {
+    if (!currentModel) return;
+    const yearVal = parseInt(yearInput?.value);
+    generationSelect.innerHTML = `<option value="">${t("calc.placeholderGeneration")}</option>`;
+    generationSelect.disabled  = true;
+    existingRow.style.display  = "none";
+    existingCheck.checked      = false;
+    if (vehicleBadge) vehicleBadge.style.display = "none";
+
+    // Require a valid 4-digit year
+    if (!yearVal || yearVal < 1900 || yearVal > new Date().getFullYear()) return;
+
+    const matching = currentVehicles.filter(v =>
+      v.model === currentModel &&
+      yearVal >= v.years[0] &&
+      yearVal <= v.years[1]
+    );
+
+    if (matching.length === 0) return;
+
     matching.forEach(v => {
       const opt       = document.createElement("option");
       opt.value       = currentVehicles.indexOf(v);
@@ -370,12 +474,17 @@ document.addEventListener("DOMContentLoaded", async () => {
       else                         opt.textContent = yearLabel;
       generationSelect.appendChild(opt);
     });
+
     generationSelect.disabled = false;
     if (matching.length === 1) {
       generationSelect.selectedIndex = 1;
       generationSelect.dispatchEvent(new Event("change"));
     }
-  });
+  }
+
+  if (yearInput) {
+    yearInput.addEventListener("input", populateGenerations);
+  }
 
   // ── Generation → Badge + Fiscal Value ─────────────────────────────────────
   generationSelect.addEventListener("change", () => {
@@ -426,16 +535,13 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (!idx) { alert(t("calc.alertSelectGen")); return; }
     const price = parseFloat(priceInput.value);
     if (isNaN(price) || price <= 0) { alert(t("calc.alertInvalidPrice")); return; }
-    let v             = currentVehicles[parseInt(idx)];
-    const fiscalValue = fiscalInput ? parseFloat(fiscalInput.value) || 0 : 0;
-    const shipping    = parseFloat(shippingInput.value) || 1800;
-    const co2Override = document.getElementById("co2-override");
-    if (co2Override && co2Override.value) {
-      v = { ...v, co2: parseFloat(co2Override.value) };
-    }
+    const inputs = getCurrentInputs();
+    if (!inputs) { alert(t("calc.alertInvalidPrice")); return; }
     const result = calculate(
-      v, price, shipping,
-      acCheck.checked, epaCheck.checked, existingCheck.checked, fiscalValue
+      inputs.v, inputs.price, inputs.auctionFee, inputs.inlandTransport,
+      inputs.shipping, inputs.marineInsurance, inputs.portHandling, inputs.homoCost,
+      acCheck.checked, epaCheck.checked, existingCheck.checked, inputs.fiscalValue,
+      inputs.manufactureYear
     );
     renderResults(result);
     resultsDiv.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -444,9 +550,9 @@ document.addEventListener("DOMContentLoaded", async () => {
   // ── Vehicle badge ──────────────────────────────────────────────────────────
   function updateVehicleBadge(v) {
     if (!vehicleBadge) return;
-    const hist    = isHistorico(v);
-    const age     = getAge(v);
-    const tags    = [];
+    const hist = isHistorico(v);
+    const age  = getAge(v);
+    const tags = [];
 
     if (hist) {
       tags.push(`<span class="tag tag--green">${t("badge.historic")}</span>`);
@@ -473,11 +579,43 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     const variantLine = v.variant ? `<p class="vehicle-note"><strong>${v.variant}</strong></p>` : "";
-    vehicleBadge.innerHTML     = tags.join("")
+    vehicleBadge.innerHTML =
+      tags.join("")
       + variantLine
       + `<p class="vehicle-note">${v.notes}</p>`
       + `<p class="vehicle-note" style="margin-top:6px;color:var(--text-muted);font-size:.8rem">${co2Label}</p>`;
     vehicleBadge.style.display = "block";
+  }
+
+  // ── Clipboard helper ───────────────────────────────────────────────────────
+  function copyToClipboard(text, btnEl) {
+    const finish = () => {
+      const original = btnEl.dataset.originalText || btnEl.textContent;
+      btnEl.dataset.originalText = original;
+      btnEl.textContent = t("results.quoteCopied");
+      btnEl.disabled = true;
+      setTimeout(() => {
+        btnEl.textContent = original;
+        btnEl.disabled = false;
+      }, 2000);
+    };
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(text).then(finish).catch(() => fallbackCopy(text, finish));
+    } else {
+      fallbackCopy(text, finish);
+    }
+  }
+
+  function fallbackCopy(text, callback) {
+    const ta = document.createElement("textarea");
+    ta.value = text;
+    ta.style.position = "fixed";
+    ta.style.opacity  = "0";
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand("copy");
+    document.body.removeChild(ta);
+    callback();
   }
 
   // ── Render results ─────────────────────────────────────────────────────────
@@ -485,37 +623,32 @@ document.addEventListener("DOMContentLoaded", async () => {
     const v             = r.vehicle;
     const hist          = r.historico;
     const purchasePrice = parseFloat(priceInput.value);
-    const shipping      = parseFloat(shippingInput.value) || 1800;
-
-    let matricNote;
-    if (r.matricTax === null) {
-      matricNote = t("results.matricNoteNoData");
-    } else {
-      const co2Str  = `${r.co2Estimated} g/km${r.co2IsEstimate ? " (" + t("results.co2WarningTitle").replace("⚠ ", "").toLowerCase() + " — 10–30%)" : ""}`;
-      const source  = r.hasFiscalValue ? t("results.matricSourceBOE") : t("results.matricSourcePurchase");
-      matricNote    = ti("results.matricNote", {
-        rate:  r.matricLabel,
-        co2:   co2Str,
-        base:  formatEuro(r.taxBase),
-        source,
-        depr:  Math.round(r.deprFactor * 100)
-      });
-    }
 
     const rows = [
-      { label: t("results.rowPurchase"),    value: formatEuro(purchasePrice),                                             note: t("results.rowPurchaseNote"),    cat: "neutral" },
-      { label: t("results.rowShipping"),    value: formatEuro(shipping),                                                  note: t("results.rowShippingNote"),    cat: "neutral" },
-      { label: t("results.rowInsurance"),   value: formatEuro(r.insurance),                                               note: t("results.rowInsuranceNote"),   cat: "neutral" },
-      { label: t("results.divider"),        value: "",                                                                    note: "",                               cat: "divider" },
-      { label: t("results.rowTariff"),      value: formatEuro(r.tariff),                                                  note: r.tariffRate === 0 ? t("results.rowTariffEPA") : t("results.rowTariffMFN"), cat: "tax" },
-      { label: t("results.rowVAT"),         value: formatEuro(r.iva),                                                     note: t("results.rowVATNote"),         cat: "tax"     },
-      { label: t("results.rowFluorGas"),    value: r.fluorGas > 0 ? formatEuro(r.fluorGas) : t("results.rowFluorGasNA"), note: t("results.rowFluorGasNote"),    cat: "tax"     },
-      { label: t("results.rowTranslation"), value: formatEuro(TRANSLATION_COST),                                          note: t("results.rowTranslationNote"), cat: "admin"   },
-      { label: t("results.rowHomo"),        value: `${formatEuro(r.homoLow)} – ${formatEuro(r.homoHigh)}`,               note: r.homoLabel,                      cat: "homo"    },
-      { label: t("results.rowITV"),         value: formatEuro(ITV_FEE_LOW),                                               note: t("results.rowITVNote"),         cat: "admin"   },
-      { label: t("results.rowMatric"),      value: r.matricTax === null ? t("results.rowMatricNA") : formatEuro(r.matricTax), note: matricNote,                  cat: "tax"     },
-      { label: t("results.rowDGT"),         value: formatEuro(DGT_FEE),                                                  note: t("results.rowDGTNote"),         cat: "admin"   },
-      { label: t("results.rowAdaptations"), value: `${formatEuro(r.adaptationsLow)} – ${formatEuro(r.adaptationsHigh)}`, note: t("results.rowAdaptationsNote"), cat: "misc"    },
+      // ── Japan costs ──
+      { label: t("results.rowPurchase"),        value: formatEuro(purchasePrice),                                              note: t("results.rowPurchaseNote"),        cat: "neutral" },
+      { label: t("results.rowAuctionFee"),       value: r.auctionFee > 0 ? formatEuro(r.auctionFee) : "—",                    note: t("results.rowAuctionFeeNote"),      cat: "neutral" },
+      { label: t("results.rowInlandTransport"),  value: r.inlandTransport > 0 ? formatEuro(r.inlandTransport) : "—",          note: t("results.rowInlandTransportNote"), cat: "neutral" },
+      { label: t("results.rowShipping"),         value: formatEuro(r.shippingCost),                                            note: t("results.rowShippingNote"),        cat: "neutral" },
+      { label: t("results.rowInsurance"),        value: formatEuro(r.marineInsurance),                                         note: t("results.rowInsuranceNote"),       cat: "neutral" },
+      { label: t("results.rowCIF"),              value: formatEuro(r.cif),                                                     note: t("results.rowCIFNote"),             cat: "neutral" },
+      { label: t("results.rowPortHandling"),     value: r.portHandling > 0 ? formatEuro(r.portHandling) : "—",                note: t("results.rowPortHandlingNote"),    cat: "neutral" },
+      // ── Import taxes ──
+      { label: t("results.dividerImport"),       value: "",                                                                    note: "",                                  cat: "divider" },
+      { label: t("results.rowTariff"),           value: formatEuro(r.tariff),                                                  note: r.tariffRate === 0 ? t("results.rowTariffEPA") : t("results.rowTariffMFN"), cat: "tax" },
+      { label: t("results.rowVAT"),              value: formatEuro(r.iva),                                                     note: t("results.rowVATNote"),             cat: "tax"     },
+      { label: t("results.rowFluorGas"),         value: r.fluorGas > 0 ? formatEuro(r.fluorGas) : t("results.rowFluorGasNA"), note: t("results.rowFluorGasNote"),        cat: "tax"     },
+      { label: t("results.rowTranslation"),      value: formatEuro(SWORN_TRANSLATION_COST),                                    note: t("results.rowTranslationNote"),     cat: "admin"   },
+      // ── Arrival / registration ──
+      { label: t("results.dividerArrival"),      value: "",                                                                    note: "",                                  cat: "divider" },
+      { label: t("results.rowFiscalValue"),      value: r.hasFiscalValue ? formatEuro(r.fiscalBase) : t("results.rowFiscalValueNA"), note: t("results.rowFiscalValueNote"), cat: "admin" },
+      { label: t("results.rowDeprCoeff"),        value: formatPercent(r.deprFactor),                                           note: ti("results.rowDeprCoeffNote", { age: r.age }), cat: "admin" },
+      { label: t("results.rowTaxableBase"),      value: formatEuro(r.taxableBase),                                             note: t("results.rowTaxableBaseNote"),     cat: "admin"   },
+      { label: t("results.rowMatric"),           value: r.matricTax === null ? t("results.rowMatricNA") : formatEuro(r.matricTax), note: r.matricTax === null ? t("results.matricNoteNoData") : ti("results.matricNote", { rate: r.matricLabel, co2: `${r.co2Estimated} g/km${r.co2IsEstimate ? " (estimado)" : ""}` }), cat: "tax" },
+      { label: t("results.rowHomo"),             value: r.homoCost > 0 ? formatEuro(r.homoCost) : "—",                        note: r.homoLabel,                         cat: "homo"    },
+      { label: t("results.rowITV"),              value: formatEuro(ITV_FEE),                                                   note: t("results.rowITVNote"),             cat: "admin"   },
+      { label: t("results.rowDGT"),              value: formatEuro(DGT_FEE),                                                   note: t("results.rowDGTNote"),             cat: "admin"   },
+      { label: t("results.rowPlates"),           value: formatEuro(PLATES_COST),                                               note: t("results.rowPlatesNote"),          cat: "admin"   },
     ];
 
     const rowsHTML = rows.map(row => {
@@ -535,6 +668,9 @@ document.addEventListener("DOMContentLoaded", async () => {
         <strong>${t("results.co2WarningTitle")}</strong>
         <p>${ti("results.co2WarningBody", { consumption: v.consumption })}</p>
       </div>` : "";
+
+    const homoWarning = r.homoCost === 0 ? `
+      <p style="font-size:.8rem;color:var(--tag-amber-text);margin-top:8px">${t("results.homoMissingWarning")}</p>` : "";
 
     resultsDiv.innerHTML = `
       <div class="results-header">
@@ -567,17 +703,26 @@ document.addEventListener("DOMContentLoaded", async () => {
           </div>
           <div class="total-plus" aria-hidden="true">+</div>
           <div class="total-block">
-            <div class="total-label">${t("results.totalImport")}</div>
-            <div class="total-range total-range--import">${formatEuro(r.importCostsLow)} – ${formatEuro(r.importCostsHigh)}</div>
+            <div class="total-label">${t("results.totalDelivery")}</div>
+            <div class="total-range total-range--import">${formatEuro(r.delivery)}</div>
           </div>
           <div class="total-plus" aria-hidden="true">=</div>
           <div class="total-block">
             <div class="total-label">${t("results.totalEstimated")}</div>
-            <div class="total-range">${formatEuro(r.totalLow)} – ${formatEuro(r.totalHigh)}</div>
+            <div class="total-range">${formatEuro(r.total)}</div>
           </div>
         </div>
         ${r.matricTax === null ? `<p style="font-size:.8rem;color:var(--tag-amber-text);margin-top:8px">${t("results.matricMissingWarning")}</p>` : ""}
+        ${homoWarning}
         <p class="total-disclaimer">${t("results.disclaimer")}</p>
+      </div>
+      <div class="quote-section">
+        <h3 class="quote-section__title">${t("results.quoteTitle")}</h3>
+        <p class="quote-section__desc">${t("results.quoteDesc")}</p>
+        <div class="quote-section__buttons">
+          <button class="btn-quote" id="btn-copy-homo" type="button">${t("results.quoteCopyHomo")}</button>
+          <button class="btn-quote" id="btn-copy-port" type="button">${t("results.quoteCopyPort")}</button>
+        </div>
       </div>
       <div class="warning-box">
         <strong>${t("results.warningTitle")}</strong>
@@ -585,6 +730,11 @@ document.addEventListener("DOMContentLoaded", async () => {
       </div>
     `;
     resultsDiv.style.display = "block";
+
+    const btnHomo = document.getElementById("btn-copy-homo");
+    const btnPort = document.getElementById("btn-copy-port");
+    if (btnHomo) btnHomo.addEventListener("click", () => copyToClipboard(buildHomoTemplate(v, purchasePrice), btnHomo));
+    if (btnPort) btnPort.addEventListener("click", () => copyToClipboard(buildPortTemplate(v, purchasePrice), btnPort));
   }
 
   // ── Mobile nav ─────────────────────────────────────────────────────────────
